@@ -33,7 +33,7 @@ void SegmentationLayer::onInitialize()
   nh.param<float>("y_range",  y_range, 1.0); // meters in front of the bot to modify costmap
   nh.param<float>("m_per_pixel",  m_per_pixel, 0.05); // number of meters per pixel
 
- //the width and height of the image representing a top-down view of the real world
+  //the width and height of the image representing a top-down view of the real world
   nh.param<int>("costmap_height",  costmap_height, 200); 
   nh.param<int>("costmap_width",  costmap_width, 200); 
 
@@ -94,10 +94,10 @@ void SegmentationLayer::segNetCb(const sensor_msgs::Image::ConstPtr &msg)
     ROS_ERROR("cv_bridge exception: %s", e.what());
     return;
   }
-
-  cv::warpPerspective(cv_ptr->image, warped, h, cv::Size(costmap_width, costmap_height));
-  //cv::rotate(warped, warped, cv::ROTATE_90_COUNTERCLOCKWISE);
-  //std::cout << "rows " << warped.rows << " cols " << warped.cols << std::endl;
+  cv::Rect ROI_IMAGE(0, 240, 848, 240);
+  cv::Mat croppedImage = cv_ptr->image(ROI_IMAGE);
+  cv::warpPerspective(croppedImage, warped, h, cv::Size(costmap_width, costmap_height));
+  cv::rotate(warped, warped, cv::ROTATE_90_COUNTERCLOCKWISE);
   int x_range_pixels = x_range/m_per_pixel;
   int y_range_pixels = y_range/m_per_pixel;
   // crop projection to only go a user defined number of meters in x and y direction
@@ -113,7 +113,7 @@ void SegmentationLayer::matchSize()
 	    master->getOriginX(), master->getOriginY());
 }
   
-  // allows the plugin to dynamically change the configuration of the costmap
+// allows the plugin to dynamically change the configuration of the costmap
 void SegmentationLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level)
 {
   enabled_ = config.enabled;
